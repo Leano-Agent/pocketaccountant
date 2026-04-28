@@ -14,6 +14,7 @@ import mileageRouter from './routes/mileage.routes';
 import passport from './config/passport';
 import oauthRouter from './routes/oauth.routes';
 import aiRouter from './routes/ai.routes';
+import autoCategoryRouter from './routes/auto-category.routes';
 
 dotenv.config();
 
@@ -34,6 +35,7 @@ app.use('/api/tax', taxRouter);
 app.use('/api/mileage', mileageRouter);
 app.use('/api/auth', oauthRouter);
 app.use('/api/ai', aiRouter);
+app.use('/api/auto-categorize', autoCategoryRouter);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

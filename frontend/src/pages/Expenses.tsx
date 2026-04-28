@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import { useExpenses } from '../contexts/ExpenseContext';
 import { useCurrency } from '../contexts/CurrencyContext';
 import { Expense, EXPENSE_CATEGORIES } from '../types';
@@ -8,6 +9,7 @@ import { Search, Filter, Download, Trash2, Edit } from 'lucide-react';
 const Expenses: React.FC = () => {
   const { expenses, loading, deleteExpense } = useExpenses();
   const { formatCurrency } = useCurrency();
+  const [categorizing, setCategorizing] = useState(false);
   
   const [filteredExpenses, setFilteredExpenses] = useState<Expense[]>(expenses);
   const [searchTerm, setSearchTerm] = useState('');
@@ -136,6 +138,27 @@ const Expenses: React.FC = () => {
     window.URL.revokeObjectURL(url);
   };
 
+  const handleAutoCategorize = async () => {
+    setCategorizing(true);
+    try {
+      const token = localStorage.getItem('token');
+      const API_URL = (typeof import.meta !== 'undefined' ? import.meta.env?.VITE_API_URL : null) || process.env.REACT_APP_API_URL || 'https://pocketaccountant-api.onrender.com/api';
+      const res = await axios.post(`${API_URL}/auto-categorize/batch`, {}, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.data.data?.categorized > 0) {
+        alert(`✅ Categorized ${res.data.data.categorized} expenses!`);
+        window.location.reload();
+      } else {
+        alert('No uncategorized expenses found.');
+      }
+    } catch (err: any) {
+      alert('Error: ' + (err.response?.data?.error || err.message));
+    } finally {
+      setCategorizing(false);
+    }
+  };
+
   const getCategoryInfo = (categoryId: string) => {
     return EXPENSE_CATEGORIES.find(c => c.id === categoryId) || {
       name: categoryId,
@@ -182,6 +205,15 @@ const Expenses: React.FC = () => {
           >
             <Download size={18} />
             <span>Export CSV</span>
+          </button>
+          
+          <button
+            onClick={handleAutoCategorize}
+            disabled={categorizing}
+            className="flex items-center space-x-2 px-4 py-2 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors disabled:opacity-50"
+          >
+            <span>{categorizing ? '...' : '🧠'}</span>
+            <span>{categorizing ? 'Categorizing...' : 'Smart Categorize'}</span>
           </button>
         </div>
       </div>
