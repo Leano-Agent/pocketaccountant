@@ -15,6 +15,7 @@ import Categories from './pages/Categories';
 import Budgets from './pages/Budgets';
 import Reports from './pages/Reports';
 import Settings from './pages/Settings';
+import ImportStatement from './pages/ImportStatement';
 
 // Protected route component
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -97,6 +98,13 @@ function AppContent() {
                   <ProtectedRoute>
                     <Layout>
                       <Settings />
+                    </Layout>
+                  </ProtectedRoute>
+                } />
+                <Route path="/import" element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <ImportStatement />
                     </Layout>
                   </ProtectedRoute>
                 } />

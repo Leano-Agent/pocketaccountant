@@ -22,6 +22,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     { path: '/categories', label: 'Categories', icon: '🏷️' },
     { path: '/budgets', label: 'Budgets', icon: '🎯' },
     { path: '/reports', label: 'Reports', icon: '📈' },
+    { path: '/import', label: 'Import', icon: '📥' },
     { path: '/settings', label: 'Settings', icon: '⚙️' },
   ];
 
@@ -85,10 +86,12 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="container mx-auto px-4 py-6">
-        {children}
-      </main>
+      <div className="md:ml-64">
+        {/* Main Content */}
+        <main className="container mx-auto px-4 py-6">
+          {children}
+        </main>
+      </div>
 
       {/* Mobile Navigation */}
       <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 md:hidden">
@@ -153,11 +156,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           </div>
         </div>
       </aside>
-
-      {/* Add padding for desktop sidebar */}
-      <div className="hidden md:block md:ml-64">
-        {/* This div pushes main content to the right of sidebar */}
-      </div>
     </div>
   );
 };
