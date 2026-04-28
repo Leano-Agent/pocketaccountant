@@ -32,9 +32,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="bg-primary-100 p-2 rounded-lg">
-                <span className="text-2xl">💰</span>
-              </div>
+              <img src="/logo.png" alt="PocketAccountant" className="w-10 h-10 rounded-lg" />
               <div>
                 <h1 className="text-xl font-bold text-gray-900">PocketAccountant</h1>
                 <div className="flex items-center space-x-2 text-sm text-gray-600">

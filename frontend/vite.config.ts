@@ -8,12 +8,12 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
+      includeAssets: ['logo.png', 'apple-touch-icon.png'],
       manifest: {
         name: 'PocketAccountant',
         short_name: 'PocketAccountant',
         description: 'African Personal Finance App',
-        theme_color: '#1e40af',
+        theme_color: '#166534',
         icons: [
           {
             src: 'pwa-192x192.png',
