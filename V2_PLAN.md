@@ -146,15 +146,35 @@ Full AI-native financial companion for South Africans with bookkeeping, invoicin
 | 3.3 OAuth Login (Google/Apple) | ✅ Done | 42f10a1 |
 | 3.4 Tax Returns | ⬜ | ITR12 Q&A assistant |
 
-### PHASE 4 — AI & Automation (Next)
+### PHASE 4 ✅ — AI & Automation (Completed 2026-04-28 23:55+)
+| Task | Status | Commit | Notes |
+|------|--------|--------|-------|
+| 4.1 AI Chat (NL queries) | ✅ Done | 26315cd | DeepSeek-powered, real-time queries |
+| 4.2 Auto-categorization | ✅ Done | 8446da8 | 35+ SA merchant patterns |
+| 4.3 Bank Open Banking | ⬜ | — | Stitch/TrueLayer/Yoco |
+| 4.4 SARS eFiling | ⬜ | — | Browser automation |
+| 4.5 AR Assistant | ⬜ | — | Dunning, DSO tracking |
+| 4.6 Multi-entity | ⬜ | — | Personal + business |
+
+### PHASE 5 — Platform & Polish (Next)
 | Task | Status | Notes |
 |------|--------|-------|
-| 4.1 AI Chat (NL queries) | ⬜ | DeepSeek/OpenAI integration |
-| 4.2 Auto-categorization | ⬜ | ML model or API-based |
-| 4.3 Bank Open Banking | ⬜ | Stitch/TrueLayer |
-| 4.4 SARS eFiling | ⬜ | Browser automation |
-| 4.5 AR Assistant | ⬜ | Dunning, DSO tracking |
-| 4.6 Multi-entity | ⬜ | Personal + business |
+| 5.1 Expense Context Save Fix | ⬜ | Local context crashes on reload |
+| 5.2 Dark Mode | ⬜ | Toggle + persistence |
+| 5.3 Mobile-friendly nav | ⬜ | Bottom nav for mobile |
+| 5.4 Data export (PDF) | ⬜ | SARS-compliant reports |
+| 5.5 Auto-backup | ⬜ | SQLite → export |
+| 5.6 PWA install prompt | ⬜ | offline-first |
+| 5.7 Multi-currency tracker | ⬜ | Cross-currency support |
+
+### PHASE 6 — Production Ready (Future)
+| Task | Status | Notes |
+|------|--------|-------|
+| 6.1 PostgreSQL migration | ⬜ | Persistent database |
+| 6.2 Email notifications | ⬜ | Invoices, reminders |
+| 6.3 Team/collaboration | ⬜ | Shared accounts |
+| 6.4 Vercel custom domain | ⬜ | pocketaccountant.co.za |
+| 6.5 Mobile app (React Native) | ⬜ | Expo build |
 
 ### PHASE 4 — AI & Automation
 | Task | Status |
