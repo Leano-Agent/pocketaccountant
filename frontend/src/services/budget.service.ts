@@ -1,3 +1,14 @@
+export interface Budget {
+  id: string;
+  name: string;
+  amount: number;
+  spent: number;
+  category: string;
+  period: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 import axios from 'axios';
 import { Budget } from '../types';
 
