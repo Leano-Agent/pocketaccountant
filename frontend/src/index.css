@@ -41,30 +41,12 @@
   .label {
     @apply block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300;
   }
-}
 
-/* Offline indicator */
-.offline-indicator {
-  position: fixed;
-  top: 1rem;
-  right: 1rem;
-  background-color: #fee2e2;
-  color: #991b1b;
-  padding: 0.5rem 1rem;
-  border-radius: 0.5rem;
-  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
-  z-index: 50;
-}
+  .offline-indicator {
+    @apply fixed top-4 right-4 bg-red-100 text-red-800 px-4 py-2 rounded-lg shadow-md z-50;
+  }
 
-/* Loading spinner */
-.loading-spinner {
-  animation: spin 1s linear infinite;
-  border-radius: 50%;
-  height: 2rem;
-  width: 2rem;
-  border-bottom: 2px solid #16a34a;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
+  .loading-spinner {
+    @apply animate-spin rounded-full h-8 w-8 border-b-2 border-green-600;
+  }
 }

@@ -9,6 +9,9 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['logo.png', 'apple-touch-icon.png'],
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,png,svg,ico}']
+      },
       manifest: {
         name: 'PocketAccountant',
         short_name: 'PocketAccountant',
