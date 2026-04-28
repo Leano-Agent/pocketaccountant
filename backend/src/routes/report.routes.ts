@@ -10,6 +10,6 @@ router.use(authenticateToken);
 router.get('/profit-loss', controller.profitLoss.bind(controller));
 router.get('/balance-sheet', controller.balanceSheet.bind(controller));
 router.get('/cash-flow', controller.cashFlow.bind(controller));
-router.get('/dashboard', controller.dashboardSummary.bind(controller));
+router.get('/dashboard', controller.summary.bind(controller));
 
 export default router;
