@@ -7,12 +7,24 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-export const AppDataSource = new DataSource({
-    type: 'sqlite',
-    database: process.env.DB_DATABASE || './database.sqlite',
-    synchronize: true, // Always synchronize for development
-    logging: process.env.NODE_ENV === 'development',
-    entities: [Expense, User, Category, Budget],
-    // migrations removed (synchronize: true)
-    subscribers: [],
-});
+const isProduction = process.env.NODE_ENV === 'production' || !!process.env.DATABASE_URL;
+
+export const AppDataSource = new DataSource(
+    isProduction && process.env.DATABASE_URL
+        ? {
+              type: 'postgres',
+              url: process.env.DATABASE_URL,
+              synchronize: true,
+              ssl: { rejectUnauthorized: false },
+              entities: [Expense, User, Category, Budget],
+              subscribers: [],
+          }
+        : {
+              type: 'sqlite',
+              database: process.env.DB_DATABASE || './database.sqlite',
+              synchronize: true,
+              logging: process.env.NODE_ENV === 'development',
+              entities: [Expense, User, Category, Budget],
+              subscribers: [],
+          }
+);
