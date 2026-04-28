@@ -124,3 +124,35 @@ Full AI-native financial companion for South Africans with bookkeeping, invoicin
 | 4.3 Chart of Accounts + Double-Entry | ⬜ | Ledger refactor |
 | 4.4 Multi-entity support | ⬜ | Personal + business toggle |
 | 4.5 Subscription tiers | ⬜ | Free/Lite/Smart/Ultra |
+
+### PHASE 1 ✅ (Completed 2026-04-28 23:30)
+| Task | Status | Commit |
+|------|--------|--------|
+| 1.1 Invoicing Backend | ✅ Done | a06fc09 |
+| 1.2 Invoices Frontend | ✅ Done | a06fc09 |
+| 1.3 Clients CRUD | ✅ Done | a06fc09 |
+
+### PHASE 2 ✅ (Completed 2026-04-28 23:45)
+| Task | Status | Commit |
+|------|--------|--------|
+| 2.1 P&L, Balance Sheet, Cash Flow | ✅ Done | b35b1fe |
+| 2.2 Dashboard with API data | ✅ Done | b35b1fe |
+
+### PHASE 3 — Tax, Mileage & Auth (Next)
+| Task | Status | Notes |
+|------|--------|-------|
+| 3.1 Tax Calendar | ⬜ | SARS deadline tracking |
+| 3.2 Mileage Logbook | ⬜ | Manual entry + SARS rates |
+| 3.3 OAuth Login (Google/Apple) | ⬜ | passport.js |
+| 3.4 Tax Returns | ⬜ | ITR12 assistant |
+
+### PHASE 4 — AI & Automation
+| Task | Status |
+|------|--------|
+| AI Chat (NL queries) | ⬜ |
+| Auto-categorization | ⬜ |
+| Bank Open Banking | ⬜ |
+| SARS eFiling | ⬜ |
+| AR Assistant | ⬜ |
+| Multi-entity | ⬜ |
+| Subscription tiers | ⬜ |
