@@ -22,6 +22,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     { path: '/categories', label: 'Categories', icon: '🏷️' },
     { path: '/budgets', label: 'Budgets', icon: '🎯' },
     { path: '/reports', label: 'Reports', icon: '📈' },
+    { path: '/invoices', label: 'Invoices', icon: '📄' },
+    { path: '/clients', label: 'Clients', icon: '👤' },
     { path: '/import', label: 'Import', icon: '📥' },
     { path: '/settings', label: 'Settings', icon: '⚙️' },
   ];

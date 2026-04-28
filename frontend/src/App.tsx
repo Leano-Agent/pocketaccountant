@@ -16,6 +16,10 @@ import Budgets from './pages/Budgets';
 import Reports from './pages/Reports';
 import Settings from './pages/Settings';
 import ImportStatement from './pages/ImportStatement';
+import Invoices from './pages/Invoices';
+import CreateInvoice from './pages/CreateInvoice';
+import InvoiceDetail from './pages/InvoiceDetail';
+import Clients from './pages/Clients';
 
 // Protected route component
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -105,6 +109,41 @@ function AppContent() {
                   <ProtectedRoute>
                     <Layout>
                       <ImportStatement />
+                    </Layout>
+                  </ProtectedRoute>
+                } />
+                <Route path="/invoices" element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <Invoices />
+                    </Layout>
+                  </ProtectedRoute>
+                } />
+                <Route path="/invoices/new" element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <CreateInvoice />
+                    </Layout>
+                  </ProtectedRoute>
+                } />
+                <Route path="/invoices/:id" element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <InvoiceDetail />
+                    </Layout>
+                  </ProtectedRoute>
+                } />
+                <Route path="/clients" element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <Clients />
+                    </Layout>
+                  </ProtectedRoute>
+                } />
+                <Route path="/clients/new" element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <Clients />
                     </Layout>
                   </ProtectedRoute>
                 } />

@@ -6,6 +6,8 @@ import { AppDataSource } from './data-source';
 import { expenseRouter } from './routes/expense.routes';
 import { budgetRouter } from './routes/budget.routes';
 import authRouter from './routes/auth.routes';
+import invoiceRouter from './routes/invoice.routes';
+import clientRouter from './routes/client.routes';
 
 dotenv.config();
 
@@ -18,6 +20,8 @@ app.use(express.json());
 app.use('/api/expenses', expenseRouter);
 app.use('/api/budgets', budgetRouter);
 app.use('/api/auth', authRouter);
+app.use('/api/invoices', invoiceRouter);
+app.use('/api/clients', clientRouter);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

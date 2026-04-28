@@ -47,6 +47,52 @@ export interface Currency {
   rate: number; // Exchange rate to base currency
 }
 
+// Invoice types
+export interface Client {
+  id: number;
+  name: string;
+  email?: string;
+  phone?: string;
+  company?: string;
+  address?: string;
+  vatNumber?: string;
+  createdAt: string;
+}
+
+export interface InvoiceItem {
+  id?: number;
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  vatRate?: number;
+  lineTotal: number;
+}
+
+export type InvoiceStatus = 'draft' | 'sent' | 'paid' | 'partial' | 'overdue' | 'cancelled';
+
+export interface Invoice {
+  id: number;
+  userId: number;
+  clientId: number;
+  client?: Client;
+  invoiceNumber: string;
+  issueDate: string;
+  dueDate: string;
+  subtotal: number;
+  vatAmount: number;
+  total: number;
+  currency: string;
+  notes?: string;
+  terms?: string;
+  paidAmount: number;
+  status: InvoiceStatus;
+  vatRegistered: boolean;
+  sentAt?: string;
+  paidAt?: string;
+  items?: InvoiceItem[];
+  createdAt: string;
+}
+
 export interface ApiResponse<T> {
   success: boolean;
   data?: T;
