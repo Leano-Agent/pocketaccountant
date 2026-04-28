@@ -12,7 +12,6 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
-  /* Optimize for African mobile networks */
   * {
     @apply box-border;
   }
@@ -24,64 +23,48 @@
 
 @layer components {
   .btn-primary {
-    @apply bg-primary-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-primary-700 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply bg-green-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700 transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
   .btn-secondary {
-    @apply bg-secondary-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-secondary-700 transition-colors focus:outline-none focus:ring-2 focus:ring-secondary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply bg-gray-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
   .card {
-    @apply bg-white rounded-xl shadow-sm p-6 border border-gray-200;
+    @apply bg-white rounded-xl shadow-sm p-6 border border-gray-200 dark:bg-gray-800 dark:border-gray-700;
   }
 
   .input-field {
-    @apply w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed;
+    @apply w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed dark:bg-gray-800 dark:border-gray-600 dark:text-white;
   }
 
   .label {
-    @apply block text-sm font-medium text-gray-700 mb-1;
+    @apply block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300;
   }
 }
 
 /* Offline indicator */
 .offline-indicator {
-  @apply fixed top-4 right-4 bg-red-100 text-red-800 px-4 py-2 rounded-lg shadow-md z-50;
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  background-color: #fee2e2;
+  color: #991b1b;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+  z-index: 50;
 }
 
 /* Loading spinner */
 .loading-spinner {
-  @apply animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600;
+  animation: spin 1s linear infinite;
+  border-radius: 50%;
+  height: 2rem;
+  width: 2rem;
+  border-bottom: 2px solid #16a34a;
 }
 
-/* Mobile-first responsive design */
-@media (max-width: 640px) {
-  .container {
-    @apply px-4;
-  }
-  
-  .card {
-    @apply p-4;
-  }
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
-
-/* Dark mode support (optional) */
-@media (prefers-color-scheme: dark) {
-  body {
-    @apply bg-gray-900 text-gray-100;
-  }
-  
-  .card {
-    @apply bg-gray-800 border-gray-700;
-  }
-  
-  .input-field {
-    @apply bg-gray-800 border-gray-700 text-white;
-  }
-  
-  .label {
-    @apply text-gray-300;
-  }
-}
-
-/* PWA Install prompt slide-up animation — uses Tailwind config */
