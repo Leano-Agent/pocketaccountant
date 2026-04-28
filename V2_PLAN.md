@@ -138,13 +138,23 @@ Full AI-native financial companion for South Africans with bookkeeping, invoicin
 | 2.1 P&L, Balance Sheet, Cash Flow | ✅ Done | b35b1fe |
 | 2.2 Dashboard with API data | ✅ Done | b35b1fe |
 
-### PHASE 3 — Tax, Mileage & Auth (Next)
+### PHASE 3 ✅ (Completed 2026-04-28 23:55)
+| Task | Status | Commit |
+|------|--------|--------|
+| 3.1 Tax Calendar | ✅ Done | 1e1f19b |
+| 3.2 Mileage Logbook | ✅ Done | 1e1f19b |
+| 3.3 OAuth Login (Google/Apple) | ✅ Done | 42f10a1 |
+| 3.4 Tax Returns | ⬜ | ITR12 Q&A assistant |
+
+### PHASE 4 — AI & Automation (Next)
 | Task | Status | Notes |
 |------|--------|-------|
-| 3.1 Tax Calendar | ⬜ | SARS deadline tracking |
-| 3.2 Mileage Logbook | ⬜ | Manual entry + SARS rates |
-| 3.3 OAuth Login (Google/Apple) | ⬜ | passport.js |
-| 3.4 Tax Returns | ⬜ | ITR12 assistant |
+| 4.1 AI Chat (NL queries) | ⬜ | DeepSeek/OpenAI integration |
+| 4.2 Auto-categorization | ⬜ | ML model or API-based |
+| 4.3 Bank Open Banking | ⬜ | Stitch/TrueLayer |
+| 4.4 SARS eFiling | ⬜ | Browser automation |
+| 4.5 AR Assistant | ⬜ | Dunning, DSO tracking |
+| 4.6 Multi-entity | ⬜ | Personal + business |
 
 ### PHASE 4 — AI & Automation
 | Task | Status |
