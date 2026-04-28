@@ -6,6 +6,8 @@ import { Budget } from './models/Budget';
 import { Invoice } from './models/Invoice';
 import { InvoiceItem } from './models/InvoiceItem';
 import { Client } from './models/Client';
+import { TaxReturn } from './models/TaxReturn';
+import { MileageTrip } from './models/MileageTrip';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -19,7 +21,7 @@ export const AppDataSource = new DataSource(
               url: process.env.DATABASE_URL,
               synchronize: true,
               ssl: { rejectUnauthorized: false },
-              entities: [Expense, User, Category, Budget, Invoice, InvoiceItem, Client],
+              entities: [Expense, User, Category, Budget, Invoice, InvoiceItem, Client, TaxReturn, MileageTrip],
               subscribers: [],
           }
         : {
@@ -27,7 +29,7 @@ export const AppDataSource = new DataSource(
               database: process.env.DB_DATABASE || './database.sqlite',
               synchronize: true,
               logging: process.env.NODE_ENV === 'development',
-              entities: [Expense, User, Category, Budget, Invoice, InvoiceItem, Client],
+              entities: [Expense, User, Category, Budget, Invoice, InvoiceItem, Client, TaxReturn, MileageTrip],
               subscribers: [],
           }
 );

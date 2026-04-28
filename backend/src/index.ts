@@ -9,6 +9,8 @@ import authRouter from './routes/auth.routes';
 import invoiceRouter from './routes/invoice.routes';
 import clientRouter from './routes/client.routes';
 import reportRouter from './routes/report.routes';
+import taxRouter from './routes/tax.routes';
+import mileageRouter from './routes/mileage.routes';
 
 dotenv.config();
 
@@ -24,6 +26,8 @@ app.use('/api/auth', authRouter);
 app.use('/api/invoices', invoiceRouter);
 app.use('/api/clients', clientRouter);
 app.use('/api/reports', reportRouter);
+app.use('/api/tax', taxRouter);
+app.use('/api/mileage', mileageRouter);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

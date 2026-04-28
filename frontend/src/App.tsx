@@ -20,6 +20,10 @@ import Invoices from './pages/Invoices';
 import CreateInvoice from './pages/CreateInvoice';
 import InvoiceDetail from './pages/InvoiceDetail';
 import Clients from './pages/Clients';
+import TaxCalendar from './pages/TaxCalendar';
+import MileageLogbook from './pages/MileageLogbook';
+import TaxCalendar from './pages/TaxCalendar';
+import MileageLogbook from './pages/MileageLogbook';
 
 // Protected route component
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -144,6 +148,20 @@ function AppContent() {
                   <ProtectedRoute>
                     <Layout>
                       <Clients />
+                    </Layout>
+                  </ProtectedRoute>
+                } />
+                <Route path="/tax" element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <TaxCalendar />
+                    </Layout>
+                  </ProtectedRoute>
+                } />
+                <Route path="/mileage" element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <MileageLogbook />
                     </Layout>
                   </ProtectedRoute>
                 } />
