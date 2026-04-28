@@ -1,9 +1,6 @@
 import OpenAI from 'openai';
 import { Request, Response } from 'express';
 import { AppDataSource } from '../data-source';
-import { Expense } from '../models/Expense';
-import { Budget } from '../models/Budget';
-import { Invoice } from '../models/Invoice';
 import { AuthRequest } from '../middleware/auth';
 
 interface Message {
@@ -38,58 +35,63 @@ export class AIChatController {
     }
 
     // Query the user's financial data
-    private async queryUserData(userId: number, question: string) {
-        const expenseRepo = AppDataSource.getRepository(Expense);
-        const budgetRepo = AppDataSource.getRepository(Budget);
-        const invoiceRepo = AppDataSource.getRepository(Invoice);
+    private async queryUserData(userId: number, question: string): Promise<string> {
+        const context: string[] = [];
+        const userIdNum = Number(userId);
 
         // Determine what data to fetch based on the question
         const needsExpenses = /spend|expense|cost|paid|transaction|categor|month|recent/i.test(question);
         const needsBudgets = /budget|limit|allocat/i.test(question);
         const needsInvoices = /invoice|bill|client|revenue|income|unpaid|overdue/i.test(question);
 
-        const context: string[] = [];
-
         if (needsExpenses) {
-            const totalExpenses = await expenseRepo
-                .createQueryBuilder('e')
-                .where('e.userId = :userId', { userId })
+            const totalExpenses = await AppDataSource
+                .createQueryBuilder()
                 .select('COALESCE(SUM(e.amount), 0)', 'total')
+                .from('expenses', 'e')
+                .where('e.userId = :userId', { userId: userIdNum })
                 .getRawOne();
 
-            const byCategory = await expenseRepo
-                .createQueryBuilder('e')
-                .where('e.userId = :userId', { userId })
+            const thisMonthStart = new Date();
+            thisMonthStart.setDate(1);
+            const monthlyTotal = await AppDataSource
+                .createQueryBuilder()
+                .select('COALESCE(SUM(e.amount), 0)', 'total')
+                .from('expenses', 'e')
+                .where('e.userId = :userId', { userId: userIdNum })
+                .andWhere('e.date >= :start', { start: thisMonthStart.toISOString().split('T')[0] })
+                .getRawOne();
+
+            const byCategory = await AppDataSource
+                .createQueryBuilder()
                 .select('e.category', 'category')
                 .addSelect('COALESCE(SUM(e.amount), 0)', 'total')
                 .addSelect('COUNT(e.id)', 'count')
+                .from('expenses', 'e')
+                .where('e.userId = :userId', { userId: userIdNum })
                 .groupBy('e.category')
                 .orderBy('total', 'DESC')
                 .getRawMany();
 
-            const recentExpenses = await expenseRepo.find({
-                where: { userId: userId as any },
-                order: { date: 'DESC' },
-                take: 10,
-            });
+            const recentExpenses = await AppDataSource
+                .createQueryBuilder()
+                .select('*')
+                .from('expenses', 'e')
+                .where('e.userId = :userId', { userId: userIdNum })
+                .orderBy('e.date', 'DESC')
+                .limit(10)
+                .getRawMany();
 
-            const thisMonth = new Date();
-            thisMonth.setDate(1);
-            const monthlyTotal = await expenseRepo
-                .createQueryBuilder('e')
-                .where('e.userId = :userId', { userId })
-                .andWhere('e.date >= :start', { start: thisMonth.toISOString().split('T')[0] })
-                .select('COALESCE(SUM(e.amount), 0)', 'total')
-                .getRawOne();
+            context.push(`Total expenses: R${Number(totalExpenses?.total || 0).toFixed(2)}`);
+            context.push(`This month's spending: R${Number(monthlyTotal?.total || 0).toFixed(2)}`);
 
-            context.push(`Total expenses: R${Number(totalExpenses.total).toFixed(2)}`);
-            context.push(`This month's spending: R${Number(monthlyTotal.total).toFixed(2)}`);
             if (byCategory.length > 0) {
                 const topCategories = byCategory.slice(0, 5)
                     .map((c: any) => `${c.category}: R${Number(c.total).toFixed(2)} (${c.count} transactions)`)
                     .join(' | ');
                 context.push(`Top categories: ${topCategories}`);
             }
+
             if (recentExpenses.length > 0) {
                 const recent = recentExpenses
                     .map((e: any) => `${e.date}: R${Number(e.amount).toFixed(2)} on ${e.description || 'untitled'} (${e.category})`)
@@ -99,30 +101,36 @@ export class AIChatController {
         }
 
         if (needsBudgets) {
-            const budgets = await budgetRepo.find({
-                where: { userId: userId as any },
-            });
+            const budgets = await AppDataSource
+                .createQueryBuilder()
+                .select('*')
+                .from('budgets', 'b')
+                .where('b.userId = :userId', { userId: userIdNum })
+                .getRawMany();
 
             if (budgets.length > 0) {
-                context.push(`\nBudgets: ${budgets.map(b => `${b.categoryId}: R${Number(b.amount).toFixed(2)}/${b.period}`).join(' | ')}`);
+                context.push(`\nBudgets: ${budgets.map((b: any) => `${b.categoryId}: R${Number(b.amount).toFixed(2)}/${b.period}`).join(' | ')}`);
             } else {
                 context.push('\nNo budgets set yet.');
             }
         }
 
         if (needsInvoices) {
-            const invoices = await invoiceRepo.find({
-                where: { userId: userId as any },
-            });
+            const invoices = await AppDataSource
+                .createQueryBuilder()
+                .select('*')
+                .from('invoices', 'i')
+                .where('i.userId = :userId', { userId: userIdNum })
+                .getRawMany();
 
-            const totalInvoiced = invoices.reduce((s, i) => s + Number(i.total), 0);
-            const paid = invoices.filter(i => i.status === 'paid').reduce((s, i) => s + Number(i.total), 0);
-            const unpaid = invoices.filter(i => ['draft', 'sent', 'overdue'].includes(i.status)).reduce((s, i) => s + Number(i.total), 0);
+            const totalInvoiced = invoices.reduce((s: number, i: any) => s + Number(i.total), 0);
+            const paid = invoices.filter((i: any) => i.status === 'paid').reduce((s: number, i: any) => s + Number(i.total), 0);
+            const unpaid = invoices.filter((i: any) => ['draft', 'sent', 'overdue'].includes(i.status)).reduce((s: number, i: any) => s + Number(i.total), 0);
 
             context.push(`\nInvoices: ${invoices.length} total | R${totalInvoiced.toFixed(2)} invoiced | R${paid.toFixed(2)} paid | R${unpaid.toFixed(2)} outstanding`);
-            const overdue = invoices.filter(i => i.status === 'overdue');
+            const overdue = invoices.filter((i: any) => i.status === 'overdue');
             if (overdue.length > 0) {
-                context.push(`⚠️ ${overdue.length} overdue invoices totaling R${overdue.reduce((s, i) => s + Number(i.total), 0).toFixed(2)}`);
+                context.push(`⚠️ ${overdue.length} overdue invoices totaling R${overdue.reduce((s: number, i: any) => s + Number(i.total), 0).toFixed(2)}`);
             }
         }
 

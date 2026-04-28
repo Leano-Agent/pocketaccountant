@@ -23,7 +23,7 @@ export class ClientController {
         try {
             const userId = req.user!.id as any;
             const client = await clientRepository().findOne({
-                where: { id: parseInt(req.params.id), userId },
+                where: { id: parseInt(req.params.id as string), userId },
             });
             if (!client) return res.status(404).json({ error: 'Client not found' });
             res.json({ data: client });
@@ -60,7 +60,7 @@ export class ClientController {
         try {
             const userId = req.user!.id as any;
             const client = await clientRepository().findOne({
-                where: { id: parseInt(req.params.id), userId },
+                where: { id: parseInt(req.params.id as string), userId },
             });
             if (!client) return res.status(404).json({ error: 'Client not found' });
 
@@ -76,7 +76,7 @@ export class ClientController {
         try {
             const userId = req.user!.id as any;
             const client = await clientRepository().findOne({
-                where: { id: parseInt(req.params.id), userId },
+                where: { id: parseInt(req.params.id as string), userId },
             });
             if (!client) return res.status(404).json({ error: 'Client not found' });
 

@@ -1,6 +1,5 @@
 import { Router } from 'express';
 import { OAuthController } from '../config/passport';
-import { authenticateToken } from '../middleware/auth';
 
 const router = Router();
 const controller = new OAuthController();

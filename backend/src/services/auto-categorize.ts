@@ -105,7 +105,7 @@ export async function batchAutoCategorize(userId?: number): Promise<{ processed:
     for (const expense of uncategorized) {
         const matchedCategory = autoCategorize(expense.description || '');
         if (matchedCategory) {
-            expense.category = matchedCategory;
+            (expense as any).category = matchedCategory;
             await expenseRepo.save(expense);
             categorized++;
         }

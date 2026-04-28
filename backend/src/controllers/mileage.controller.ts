@@ -92,7 +92,7 @@ export class MileageController {
         try {
             const userId = req.user!.id as any;
             const trip = await AppDataSource.getRepository(MileageTrip).findOne({
-                where: { id: parseInt(req.params.id), userId },
+                where: { id: parseInt(req.params.id as string), userId },
             });
 
             if (!trip) return res.status(404).json({ error: 'Trip not found' });
@@ -125,7 +125,7 @@ export class MileageController {
         try {
             const userId = req.user!.id as any;
             const trip = await AppDataSource.getRepository(MileageTrip).findOne({
-                where: { id: parseInt(req.params.id), userId },
+                where: { id: parseInt(req.params.id as string), userId },
             });
             if (!trip) return res.status(404).json({ error: 'Trip not found' });
 

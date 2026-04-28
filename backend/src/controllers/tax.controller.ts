@@ -90,7 +90,7 @@ export class TaxController {
 
             const taxRepo = AppDataSource.getRepository(TaxReturn);
             const taxReturn = await taxRepo.findOne({
-                where: { id: parseInt(req.params.id), userId },
+                where: { id: parseInt(req.params.id as string), userId },
             });
 
             if (!taxReturn) {

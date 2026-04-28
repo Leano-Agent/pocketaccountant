@@ -13,10 +13,10 @@ passport.serializeUser((user: any, done) => {
     done(null, user.id);
 });
 
-passport.deserializeUser(async (id: number, done) => {
+passport.deserializeUser(async (id: any, done) => {
     try {
         const repo = AppDataSource.getRepository(User);
-        const user = await repo.findOne({ where: { id } });
+        const user = await repo.findOne({ where: { id: parseInt(id) } as any });
         done(null, user);
     } catch (err) {
         done(err);

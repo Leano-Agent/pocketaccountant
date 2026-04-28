@@ -63,7 +63,7 @@ export class InvoiceController {
         try {
             const userId = req.user!.id as any;
             const invoice = await invoiceRepository().findOne({
-                where: { id: parseInt(req.params.id), userId },
+                where: { id: parseInt(req.params.id as string), userId },
                 relations: ['client', 'items'],
             });
 
@@ -172,7 +172,7 @@ export class InvoiceController {
             }
 
             const invoice = await invoiceRepository().findOne({
-                where: { id: parseInt(req.params.id), userId },
+                where: { id: parseInt(req.params.id as string), userId },
             });
 
             if (!invoice) {
@@ -202,7 +202,7 @@ export class InvoiceController {
             }
 
             const invoice = await invoiceRepository().findOne({
-                where: { id: parseInt(req.params.id), userId },
+                where: { id: parseInt(req.params.id as string), userId },
             });
 
             if (!invoice) {
@@ -232,7 +232,7 @@ export class InvoiceController {
         try {
             const userId = req.user!.id as any;
             const invoice = await invoiceRepository().findOne({
-                where: { id: parseInt(req.params.id), userId },
+                where: { id: parseInt(req.params.id as string), userId },
             });
 
             if (!invoice) {
