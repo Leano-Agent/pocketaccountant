@@ -156,16 +156,27 @@ Full AI-native financial companion for South Africans with bookkeeping, invoicin
 | 4.5 AR Assistant | ⬜ | — | Dunning, DSO tracking |
 | 4.6 Multi-entity | ⬜ | — | Personal + business |
 
-### PHASE 5 — Platform & Polish (Next)
+### PHASE 5 ✅ — Platform & Polish (Completed 2026-04-29 00:00)
+| Task | Status | Commit | Notes |
+|------|--------|--------|-------|
+| 5.1 Type Fixes (was crash) | ✅ Done | 219fc42 | Expense.id: string\|number, userId: number |
+| 5.2 Dark Mode | ✅ Done | 219fc42 | Toggle + persistence + system pref |
+| 5.3 Mobile bottom nav | ✅ Done | 219fc42 | Fixed bottom, 5 items + More |
+| 5.4 Data export (PDF) | ⬜ | — | SARS-compliant reports |
+| 5.5 Auto-backup | ⬜ | — | SQLite → export |
+| 5.6 PWA install prompt | ✅ Done | 219fc42 | 7-day cooldown, standalone detect |
+| 5.7 Dark mode across pages | ⬜ | — | Individual pages need dark: classes |
+
+### PHASE 6 — Production Ready (Future)
 | Task | Status | Notes |
 |------|--------|-------|
-| 5.1 Expense Context Save Fix | ⬜ | Local context crashes on reload |
-| 5.2 Dark Mode | ⬜ | Toggle + persistence |
-| 5.3 Mobile-friendly nav | ⬜ | Bottom nav for mobile |
-| 5.4 Data export (PDF) | ⬜ | SARS-compliant reports |
-| 5.5 Auto-backup | ⬜ | SQLite → export |
-| 5.6 PWA install prompt | ⬜ | offline-first |
-| 5.7 Multi-currency tracker | ⬜ | Cross-currency support |
+| 6.1 Full dark mode for all pages | ⬜ | Dark classes in Dashboard, Expenses, Invoices, etc. |
+| 6.2 PDF export (SARS reports) | ⬜ | P&L, mileage logbook receipts |
+| 6.3 PostgreSQL migration | ⬜ | Persistent database |
+| 6.4 Email notifications | ⬜ | Invoice reminders, tax deadlines |
+| 6.5 Team/collaboration | ⬜ | Shared accounts |
+| 6.6 Vercel custom domain | ⬜ | pocketaccountant.co.za |
+| 6.7 Mobile app (React Native) | ⬜ | Expo build |
 
 ### PHASE 6 — Production Ready (Future)
 | Task | Status | Notes |
