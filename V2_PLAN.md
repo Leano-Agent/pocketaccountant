@@ -88,3 +88,39 @@ Full AI-native financial companion for South Africans with bookkeeping, invoicin
 | Agent D | OAuth Integration | passport config, Google/Apple strategies, frontend OAuth buttons |
 | Agent E | Mileage Logbook Backend+Frontend | MileageTrip model, routes, controller, logbook page, export |
 | Agent F | Tax Calendar Engine | TaxReturn model, SARS deadline logic, calendar UI, notifications |
+
+---
+
+## Progress Tracker
+
+### PHASE 1 ✅ (Completed 2026-04-28 23:30)
+| Task | Status | Commit |
+|------|--------|--------|
+| 1.1 Invoicing Backend | ✅ Done | a06fc09 |
+| 1.2 Invoices Frontend | ✅ Done | a06fc09 |
+| 1.3 Clients CRUD | ✅ Done | a06fc09 |
+| 1.4 Report Improvements | ⬜ Next | — |
+
+### PHASE 2 — Tax & Reports
+| Task | Status | Notes |
+|------|--------|-------|
+| 2.1 P&L / Balance Sheet / Cash Flow | ⬜ | Needs backend aggregation |
+| 2.2 Tax Calendar Engine | ⬜ | SARS deadline tracking + push |
+| 2.3 Mileage Logbook | ⬜ | Manual entry, GPS later |
+
+### PHASE 3 — AI & Automation
+| Task | Status | Notes |
+|------|--------|-------|
+| 3.1 AI Chat (NL queries) | ⬜ | OpenAI/DeepSeek integration |
+| 3.2 OAuth Login (Google/Apple) | ⬜ | passport.js strategies |
+| 3.3 Auto-categorization | ⬜ | ML model or API-based |
+| 3.4 Bank Open Banking | ⬜ | Stitch/TrueLayer integration |
+
+### PHASE 4 — Advanced
+| Task | Status | Notes |
+|------|--------|-------|
+| 4.1 SARS eFiling Integration | ⬜ | Browser automation |
+| 4.2 AR Assistant (dunning, DSO) | ⬜ | Payment prediction |
+| 4.3 Chart of Accounts + Double-Entry | ⬜ | Ledger refactor |
+| 4.4 Multi-entity support | ⬜ | Personal + business toggle |
+| 4.5 Subscription tiers | ⬜ | Free/Lite/Smart/Ultra |

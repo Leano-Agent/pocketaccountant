@@ -8,6 +8,7 @@ import { budgetRouter } from './routes/budget.routes';
 import authRouter from './routes/auth.routes';
 import invoiceRouter from './routes/invoice.routes';
 import clientRouter from './routes/client.routes';
+import reportRouter from './routes/report.routes';
 
 dotenv.config();
 
@@ -22,6 +23,7 @@ app.use('/api/budgets', budgetRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/invoices', invoiceRouter);
 app.use('/api/clients', clientRouter);
+app.use('/api/reports', reportRouter);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

@@ -1,480 +1,328 @@
-import React, { useState, useEffect } from 'react';
-import { useExpenses } from '../contexts/ExpenseContext';
-import { useCurrency } from '../contexts/CurrencyContext';
-import { EXPENSE_CATEGORIES } from '../types';
-import { format, subMonths, startOfMonth, endOfMonth, eachMonthOfInterval } from 'date-fns';
-import { Download, Filter, TrendingUp, TrendingDown, PieChart, BarChart, Calendar } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import axios from 'axios';
+
+const API_URL = (typeof import.meta !== 'undefined' ? import.meta.env?.VITE_API_URL : null) || process.env.REACT_APP_API_URL || 'https://pocketaccountant-api.onrender.com/api';
+
+type ReportType = 'profit-loss' | 'balance-sheet' | 'cash-flow';
+
+interface PLData {
+  period: { start: string; end: string };
+  revenue: { total: number; count: number };
+  expenses: { total: number; byCategory: { category: string; amount: number; percentage: number }[]; count: number };
+  netProfit: number;
+  isProfitable: boolean;
+  profitMargin: number;
+}
+
+interface BalanceSheetData {
+  asAt: string;
+  assets: { total: number; accountsReceivable: number; cashAndBank: number };
+  liabilities: { total: number; outstandingExpenses: number };
+  equity: { total: number; retainedEarnings: number };
+}
+
+interface CashFlowData {
+  monthly: { period: string; cashIn: number; cashOut: number; netCashFlow: number }[];
+  summary: { totalIn: number; totalOut: number; netTotal: number };
+}
 
 const Reports: React.FC = () => {
-  const { expenses } = useExpenses();
-  const { formatCurrency, selectedCurrency } = useCurrency();
-  
-  const [timeRange, setTimeRange] = useState<'week' | 'month' | 'quarter' | 'year'>('month');
-  const [selectedMonth, setSelectedMonth] = useState(format(new Date(), 'yyyy-MM'));
-  const [chartType, setChartType] = useState<'pie' | 'bar'>('pie');
-  const [reportData, setReportData] = useState<any>(null);
-
-  useEffect(() => {
-    generateReportData();
-  }, [expenses, timeRange, selectedMonth, selectedCurrency]);
-
-  const generateReportData = () => {
+  const [activeReport, setActiveReport] = useState<ReportType>('profit-loss');
+  const [dateRange, setDateRange] = useState(() => {
     const now = new Date();
-    let startDate: Date;
-    let endDate: Date;
+    const start = new Date(now.getFullYear(), 0, 1);
+    return {
+      start: start.toISOString().split('T')[0],
+      end: now.toISOString().split('T')[0],
+    };
+  });
+  const [months, setMonths] = useState(6);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [plData, setPlData] = useState<PLData | null>(null);
+  const [bsData, setBsData] = useState<BalanceSheetData | null>(null);
+  const [cfData, setCfData] = useState<CashFlowData | null>(null);
 
-    switch (timeRange) {
-      case 'week':
-        startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7);
-        endDate = now;
-        break;
-      case 'month':
-        const [year, month] = selectedMonth.split('-').map(Number);
-        startDate = startOfMonth(new Date(year, month - 1));
-        endDate = endOfMonth(new Date(year, month - 1));
-        break;
-      case 'quarter':
-        startDate = subMonths(now, 3);
-        endDate = now;
-        break;
-      case 'year':
-        startDate = subMonths(now, 12);
-        endDate = now;
-        break;
-    }
+  const fetchReport = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const token = localStorage.getItem('token');
+      let endpoint = '';
 
-    // Filter expenses for the time range
-    const filteredExpenses = expenses.filter(expense => {
-      const expenseDate = new Date(expense.date);
-      return expenseDate >= startDate && expenseDate <= endDate;
-    });
+      if (activeReport === 'profit-loss') {
+        endpoint = `${API_URL}/reports/profit-loss?startDate=${dateRange.start}&endDate=${dateRange.end}`;
+      } else if (activeReport === 'balance-sheet') {
+        endpoint = `${API_URL}/reports/balance-sheet?asAt=${dateRange.end}`;
+      } else {
+        endpoint = `${API_URL}/reports/cash-flow?months=${months}`;
+      }
 
-    // Calculate category breakdown
-    const categoryBreakdown = EXPENSE_CATEGORIES.map(category => {
-      const categoryExpenses = filteredExpenses.filter(expense => expense.category === category.id);
-      const total = categoryExpenses.reduce((sum, expense) => sum + expense.amount, 0);
-      const count = categoryExpenses.length;
-      
-      return {
-        ...category,
-        total,
-        count,
-        percentage: filteredExpenses.length > 0 ? (total / filteredExpenses.reduce((sum, e) => sum + e.amount, 0)) * 100 : 0,
-      };
-    }).filter(item => item.total > 0)
-      .sort((a, b) => b.total - a.total);
-
-    // Calculate monthly trends
-    const months = eachMonthOfInterval({ start: subMonths(now, 5), end: now });
-    const monthlyTrends = months.map(month => {
-      const monthStart = startOfMonth(month);
-      const monthEnd = endOfMonth(month);
-      
-      const monthExpenses = expenses.filter(expense => {
-        const expenseDate = new Date(expense.date);
-        return expenseDate >= monthStart && expenseDate <= monthEnd;
+      const res = await axios.get(endpoint, {
+        headers: { Authorization: `Bearer ${token}` },
       });
-      
-      const total = monthExpenses.reduce((sum, expense) => sum + expense.amount, 0);
-      
-      return {
-        month: format(month, 'MMM yyyy'),
-        total,
-        count: monthExpenses.length,
-      };
-    });
 
-    // Calculate top expenses
-    const topExpenses = [...filteredExpenses]
-      .sort((a, b) => b.amount - a.amount)
-      .slice(0, 5);
-
-    // Calculate statistics
-    const totalAmount = filteredExpenses.reduce((sum, expense) => sum + expense.amount, 0);
-    const averageExpense = filteredExpenses.length > 0 ? totalAmount / filteredExpenses.length : 0;
-    const largestExpense = filteredExpenses.length > 0 ? Math.max(...filteredExpenses.map(e => e.amount)) : 0;
-    const smallestExpense = filteredExpenses.length > 0 ? Math.min(...filteredExpenses.map(e => e.amount)) : 0;
-
-    // Calculate trend vs previous period
-    let previousPeriodTotal = 0;
-    if (timeRange === 'month') {
-      const prevMonth = subMonths(startDate, 1);
-      const prevMonthStart = startOfMonth(prevMonth);
-      const prevMonthEnd = endOfMonth(prevMonth);
-      
-      previousPeriodTotal = expenses
-        .filter(expense => {
-          const expenseDate = new Date(expense.date);
-          return expenseDate >= prevMonthStart && expenseDate <= prevMonthEnd;
-        })
-        .reduce((sum, expense) => sum + expense.amount, 0);
+      const data = res.data.data || res.data;
+      if (activeReport === 'profit-loss') setPlData(data);
+      else if (activeReport === 'balance-sheet') setBsData(data);
+      else setCfData(data);
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'Failed to load report');
+    } finally {
+      setLoading(false);
     }
+  }, [activeReport, dateRange, months]);
 
-    const trendPercentage = previousPeriodTotal > 0 
-      ? ((totalAmount - previousPeriodTotal) / previousPeriodTotal) * 100 
-      : 0;
+  useEffect(() => { fetchReport(); }, [fetchReport]);
 
-    setReportData({
-      timeRange,
-      startDate,
-      endDate,
-      totalAmount,
-      totalExpenses: filteredExpenses.length,
-      categoryBreakdown,
-      monthlyTrends,
-      topExpenses,
-      statistics: {
-        averageExpense,
-        largestExpense,
-        smallestExpense,
-        trendPercentage,
-      },
-    });
-  };
+  const formatCurrency = (amt: number) =>
+    `R${Number(amt).toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
-  const exportReport = () => {
-    if (!reportData) return;
-
-    const reportText = `
-PocketAccountant Report
-Generated: ${format(new Date(), 'yyyy-MM-dd HH:mm:ss')}
-Time Range: ${timeRange}
-Period: ${format(reportData.startDate, 'yyyy-MM-dd')} to ${format(reportData.endDate, 'yyyy-MM-dd')}
-
-SUMMARY
-Total Amount: ${formatCurrency(reportData.totalAmount)}
-Total Expenses: ${reportData.totalExpenses}
-Average Expense: ${formatCurrency(reportData.statistics.averageExpense)}
-Trend vs Previous: ${reportData.statistics.trendPercentage.toFixed(1)}%
-
-CATEGORY BREAKDOWN
-${reportData.categoryBreakdown.map((cat: any) => 
-  `${cat.name}: ${formatCurrency(cat.total)} (${cat.count} expenses, ${cat.percentage.toFixed(1)}%)`
-).join('\n')}
-
-TOP EXPENSES
-${reportData.topExpenses.map((expense: any, index: number) => 
-  `${index + 1}. ${expense.description}: ${formatCurrency(expense.amount, expense.currency)} (${format(new Date(expense.date), 'MMM dd')})`
-).join('\n')}
-
-MONTHLY TRENDS
-${reportData.monthlyTrends.map((month: any) => 
-  `${month.month}: ${formatCurrency(month.total)} (${month.count} expenses)`
-).join('\n')}
-    `.trim();
-
-    const blob = new Blob([reportText], { type: 'text/plain' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `pocketaccountant_report_${format(new Date(), 'yyyy-MM-dd')}.txt`;
-    a.click();
-    window.URL.revokeObjectURL(url);
-  };
-
-  if (!reportData) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
-      </div>
-    );
-  }
+  const reportTabs: { type: ReportType; label: string; icon: string }[] = [
+    { type: 'profit-loss', label: 'P&L', icon: '📊' },
+    { type: 'balance-sheet', label: 'Balance Sheet', icon: '⚖️' },
+    { type: 'cash-flow', label: 'Cash Flow', icon: '💵' },
+  ];
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Reports & Analytics</h1>
-          <p className="text-gray-600 mt-1">Gain insights into your spending habits</p>
-        </div>
-        
-        <div className="flex items-center space-x-3">
+    <div className="max-w-6xl mx-auto">
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-800">Financial Reports</h1>
+        <p className="text-gray-500 text-sm">Profit & Loss, Balance Sheet, and Cash Flow statements</p>
+      </div>
+
+      {/* Tab Navigation */}
+      <div className="bg-white rounded-xl border border-gray-200 p-1.5 mb-6 inline-flex">
+        {reportTabs.map(tab => (
           <button
-            onClick={exportReport}
-            className="flex items-center space-x-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+            key={tab.type}
+            onClick={() => setActiveReport(tab.type)}
+            className={`px-5 py-2.5 rounded-lg text-sm font-medium transition ${
+              activeReport === tab.type
+                ? 'bg-green-600 text-white shadow-sm'
+                : 'text-gray-600 hover:text-gray-800'
+            }`}
           >
-            <Download size={18} />
-            <span>Export Report</span>
+            {tab.icon} {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Date Controls */}
+      <div className="bg-white rounded-xl border border-gray-200 p-4 mb-6">
+        <div className="flex flex-wrap gap-4 items-end">
+          {(activeReport === 'profit-loss' || activeReport === 'balance-sheet') && (
+            <>
+              <div>
+                <label className="block text-xs text-gray-500 mb-1">From</label>
+                <input
+                  type="date"
+                  value={dateRange.start}
+                  onChange={e => setDateRange({ ...dateRange, start: e.target.value })}
+                  className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-500 mb-1">To</label>
+                <input
+                  type="date"
+                  value={dateRange.end}
+                  onChange={e => setDateRange({ ...dateRange, end: e.target.value })}
+                  className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                />
+              </div>
+            </>
+          )}
+          {activeReport === 'cash-flow' && (
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">Months</label>
+              <select value={months} onChange={e => setMonths(parseInt(e.target.value))} className="border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                <option value={3}>3 months</option>
+                <option value={6}>6 months</option>
+                <option value={12}>12 months</option>
+              </select>
+            </div>
+          )}
+          <button
+            onClick={fetchReport}
+            disabled={loading}
+            className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700 disabled:bg-gray-400"
+          >
+            {loading ? 'Loading...' : 'Refresh'}
           </button>
         </div>
       </div>
 
-      {/* Time Range Selector */}
-      <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex items-center space-x-3">
-            <Calendar className="text-gray-400" size={20} />
-            <h2 className="text-lg font-semibold text-gray-900">Report Period</h2>
-          </div>
-          
-          <div className="flex flex-wrap gap-2">
-            {['week', 'month', 'quarter', 'year'].map((range) => (
-              <button
-                key={range}
-                onClick={() => setTimeRange(range as any)}
-                className={`px-4 py-2 rounded-lg capitalize ${
-                  timeRange === range
-                    ? 'bg-primary-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                {range}
-              </button>
-            ))}
-          </div>
+      {error && <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">{error}</div>}
+
+      {loading ? (
+        <div className="text-center py-16">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto"></div>
+          <p className="mt-3 text-gray-500">Generating report...</p>
         </div>
-
-        {timeRange === 'month' && (
-          <div className="mt-4">
-            <label className="label">Select Month</label>
-            <input
-              type="month"
-              value={selectedMonth}
-              onChange={(e) => setSelectedMonth(e.target.value)}
-              className="input-field"
-            />
-          </div>
-        )}
-
-        {/* Period Summary */}
-        <div className="mt-6 pt-6 border-t border-gray-200">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="text-center p-4">
-              <div className="text-2xl font-bold text-primary-600">
-                {formatCurrency(reportData.totalAmount)}
-              </div>
-              <div className="text-sm text-gray-600 mt-1">Total Spending</div>
-            </div>
-            
-            <div className="text-center p-4">
-              <div className="text-2xl font-bold text-green-600">
-                {reportData.totalExpenses}
-              </div>
-              <div className="text-sm text-gray-600 mt-1">Total Expenses</div>
-            </div>
-            
-            <div className="text-center p-4">
-              <div className="flex items-center justify-center space-x-2">
-                {reportData.statistics.trendPercentage >= 0 ? (
-                  <TrendingUp className="text-red-500" size={24} />
-                ) : (
-                  <TrendingDown className="text-green-500" size={24} />
-                )}
-                <div className="text-2xl font-bold">
-                  {Math.abs(reportData.statistics.trendPercentage).toFixed(1)}%
+      ) : (
+        <>
+          {/* PROFIT & LOSS */}
+          {activeReport === 'profit-loss' && plData && (
+            <div className="space-y-6">
+              {/* Summary Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="bg-white rounded-xl border border-gray-200 p-6">
+                  <div className="text-sm text-gray-500 mb-1">Revenue</div>
+                  <div className="text-2xl font-bold text-green-600">{formatCurrency(plData.revenue.total)}</div>
+                  <div className="text-xs text-gray-400">{plData.revenue.count} paid invoices</div>
+                </div>
+                <div className="bg-white rounded-xl border border-gray-200 p-6">
+                  <div className="text-sm text-gray-500 mb-1">Expenses</div>
+                  <div className="text-2xl font-bold text-red-600">{formatCurrency(plData.expenses.total)}</div>
+                  <div className="text-xs text-gray-400">{plData.expenses.count} transactions</div>
+                </div>
+                <div className="bg-white rounded-xl border border-gray-200 p-6">
+                  <div className="text-sm text-gray-500 mb-1">Net Profit</div>
+                  <div className={`text-2xl font-bold ${plData.isProfitable ? 'text-green-600' : 'text-red-600'}`}>
+                    {formatCurrency(plData.netProfit)}
+                  </div>
+                  <div className="text-xs text-gray-400">{plData.profitMargin}% margin</div>
                 </div>
               </div>
-              <div className="text-sm text-gray-600 mt-1">
-                {reportData.statistics.trendPercentage >= 0 ? 'Increase' : 'Decrease'} vs previous
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
 
-      {/* Chart Type Selector */}
-      <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-lg font-semibold text-gray-900">Visualization</h2>
-          
-          <div className="flex space-x-2">
-            <button
-              onClick={() => setChartType('pie')}
-              className={`flex items-center space-x-2 px-4 py-2 rounded-lg ${
-                chartType === 'pie'
-                  ? 'bg-primary-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              <PieChart size={18} />
-              <span>Pie Chart</span>
-            </button>
-            
-            <button
-              onClick={() => setChartType('bar')}
-              className={`flex items-center space-x-2 px-4 py-2 rounded-lg ${
-                chartType === 'bar'
-                  ? 'bg-primary-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              <BarChart size={18} />
-              <span>Bar Chart</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Chart Placeholder */}
-        <div className="h-64 bg-gray-50 rounded-lg flex items-center justify-center">
-          <div className="text-center">
-            <div className="text-4xl mb-4">📊</div>
-            <h3 className="font-semibold text-gray-900 mb-2">Spending by Category</h3>
-            <p className="text-gray-600">Visualization would appear here</p>
-            <div className="mt-4 text-sm text-gray-500">
-              {chartType === 'pie' ? 'Pie chart showing category distribution' : 'Bar chart showing monthly trends'}
-            </div>
-          </div>
-        </div>
-
-        {/* Category Breakdown */}
-        <div className="mt-6 space-y-4">
-          <h3 className="font-semibold text-gray-900">Category Breakdown</h3>
-          {reportData.categoryBreakdown.map((category: any) => (
-            <div key={category.id} className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <div className="flex items-center space-x-2">
-                  <div
-                    className="w-3 h-3 rounded-full"
-                    style={{ backgroundColor: category.color }}
-                  ></div>
-                  <span className="font-medium">{category.name}</span>
-                  <span className="text-gray-500">({category.count} expenses)</span>
-                </div>
-                <div className="font-semibold">{formatCurrency(category.total)}</div>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div
-                  className="h-2 rounded-full"
-                  style={{ 
-                    width: `${Math.min(category.percentage, 100)}%`,
-                    backgroundColor: category.color 
-                  }}
-                ></div>
-              </div>
-              <div className="text-xs text-gray-500 text-right">
-                {category.percentage.toFixed(1)}% of total
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Statistics Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Top Expenses */}
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Top Expenses</h2>
-          
-          <div className="space-y-4">
-            {reportData.topExpenses.length > 0 ? (
-              reportData.topExpenses.map((expense: any, index: number) => {
-                const category = EXPENSE_CATEGORIES.find(c => c.id === expense.category);
-                return (
-                  <div key={expense.id} className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 rounded-lg flex items-center justify-center text-white" style={{ backgroundColor: category?.color || '#6B7280' }}>
-                        {category?.icon || '📦'}
-                      </div>
-                      <div>
-                        <div className="font-medium text-gray-900">{expense.description}</div>
-                        <div className="text-sm text-gray-500">
-                          {format(new Date(expense.date), 'MMM dd, yyyy')}
+              {/* Expenses by Category */}
+              {plData.expenses.byCategory.length > 0 && (
+                <div className="bg-white rounded-xl border border-gray-200 p-6">
+                  <h3 className="font-semibold text-gray-800 mb-4">Expenses by Category</h3>
+                  <div className="space-y-3">
+                    {plData.expenses.byCategory.map((cat, i) => (
+                      <div key={i}>
+                        <div className="flex justify-between text-sm mb-1">
+                          <span className="text-gray-700">{cat.category}</span>
+                          <span className="font-medium">
+                            {formatCurrency(cat.amount)} ({cat.percentage}%)
+                          </span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div
+                            className="bg-green-500 h-2 rounded-full"
+                            style={{ width: `${cat.percentage}%` }}
+                          />
                         </div>
                       </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-semibold text-gray-900">
-                        {formatCurrency(expense.amount, expense.currency)}
-                      </div>
-                      <div className="text-sm text-gray-500">{expense.currency}</div>
-                    </div>
+                    ))}
                   </div>
-                );
-              })
-            ) : (
-              <div className="text-center py-8 text-gray-500">
-                <div className="text-4xl mb-4">💸</div>
-                <p>No expenses in this period</p>
-              </div>
-            )}
-          </div>
-        </div>
+                </div>
+              )}
 
-        {/* Monthly Trends */}
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Monthly Trends</h2>
-          
-          <div className="space-y-4">
-            {reportData.monthlyTrends.map((month: any, index: number) => (
-              <div key={index} className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="font-medium text-gray-900">{month.month}</span>
-                  <span className="font-semibold">{formatCurrency(month.total)}</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div
-                    className="bg-primary-600 h-2 rounded-full"
-                    style={{ 
-                      width: `${(month.total / Math.max(...reportData.monthlyTrends.map((m: any) => m.total))) * 100}%` 
-                    }}
-                  ></div>
-                </div>
-                <div className="text-xs text-gray-500 text-right">
-                  {month.count} expenses
-                </div>
+              <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 text-sm text-blue-800">
+                Period: {plData.period.start} → {plData.period.end}
               </div>
-            ))}
-          </div>
-        </div>
-      </div>
+            </div>
+          )}
 
-      {/* Insights */}
-      <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
-        <h3 className="text-lg font-semibold text-blue-900 mb-4">📈 Spending Insights</h3>
-        
-        <div className="space-y-4">
-          <div className="flex items-start space-x-3">
-            <div className="bg-blue-100 p-2 rounded-lg">
-              <span className="text-blue-600">💡</span>
-            </div>
-            <div>
-              <div className="font-medium text-blue-900">Average Expense</div>
-              <div className="text-blue-800">
-                You spend {formatCurrency(reportData.statistics.averageExpense)} on average per expense
+          {/* BALANCE SHEET */}
+          {activeReport === 'balance-sheet' && bsData && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="bg-white rounded-xl border border-gray-200 p-6">
+                <h3 className="font-semibold text-gray-800 mb-4">Assets</h3>
+                <div className="space-y-3">
+                  <div className="flex justify-between py-2 border-b border-gray-100">
+                    <span className="text-gray-600">Cash & Bank</span>
+                    <span className="font-medium text-gray-800">{formatCurrency(bsData.assets.cashAndBank)}</span>
+                  </div>
+                  <div className="flex justify-between py-2 border-b border-gray-100">
+                    <span className="text-gray-600">Accounts Receivable</span>
+                    <span className="font-medium text-gray-800">{formatCurrency(bsData.assets.accountsReceivable)}</span>
+                  </div>
+                  <div className="flex justify-between py-2 font-semibold text-lg">
+                    <span>Total Assets</span>
+                    <span className="text-green-700">{formatCurrency(bsData.assets.total)}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-xl border border-gray-200 p-6">
+                <h3 className="font-semibold text-gray-800 mb-4">Liabilities & Equity</h3>
+                <div className="space-y-3">
+                  <div className="flex justify-between py-2 border-b border-gray-100">
+                    <span className="text-gray-600">Liabilities</span>
+                    <span className="font-medium text-gray-800">{formatCurrency(bsData.liabilities.total)}</span>
+                  </div>
+                  <div className="flex justify-between py-2 border-b border-gray-100">
+                    <span className="text-gray-600">Retained Earnings</span>
+                    <span className="font-medium text-gray-800">{formatCurrency(bsData.equity.retainedEarnings)}</span>
+                  </div>
+                  <div className="flex justify-between py-2 font-semibold text-lg">
+                    <span>Total Liabilities & Equity</span>
+                    <span className="text-green-700">{formatCurrency(bsData.totalLiabilitiesAndEquity)}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="md:col-span-2 bg-blue-50 border border-blue-200 rounded-xl p-4 text-sm text-blue-800">
+                As at: {bsData.asAt}
               </div>
             </div>
-          </div>
-          
-          <div className="flex items-start space-x-3">
-            <div className="bg-blue-100 p-2 rounded-lg">
-              <span className="text-blue-600">🎯</span>
-            </div>
-            <div>
-              <div className="font-medium text-blue-900">Top Category</div>
-              <div className="text-blue-800">
-                {reportData.categoryBreakdown[0]?.name || 'No data'} is your highest spending category at{' '}
-                {reportData.categoryBreakdown[0] ? formatCurrency(reportData.categoryBreakdown[0].total) : '--'}
+          )}
+
+          {/* CASH FLOW */}
+          {activeReport === 'cash-flow' && cfData && (
+            <div className="space-y-6">
+              {/* Summary */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="bg-white rounded-xl border border-gray-200 p-6">
+                  <div className="text-sm text-gray-500 mb-1">Total Cash In</div>
+                  <div className="text-2xl font-bold text-green-600">{formatCurrency(cfData.summary.totalIn)}</div>
+                </div>
+                <div className="bg-white rounded-xl border border-gray-200 p-6">
+                  <div className="text-sm text-gray-500 mb-1">Total Cash Out</div>
+                  <div className="text-2xl font-bold text-red-600">{formatCurrency(cfData.summary.totalOut)}</div>
+                </div>
+                <div className="bg-white rounded-xl border border-gray-200 p-6">
+                  <div className="text-sm text-gray-500 mb-1">Net Cash Flow</div>
+                  <div className={`text-2xl font-bold ${cfData.summary.netTotal >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    {formatCurrency(cfData.summary.netTotal)}
+                  </div>
+                </div>
+              </div>
+
+              {/* Monthly Breakdown */}
+              <div className="bg-white rounded-xl border border-gray-200 p-6">
+                <h3 className="font-semibold text-gray-800 mb-4">Monthly Cash Flow</h3>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-gray-200">
+                        <th className="text-left py-3 font-medium text-gray-600">Period</th>
+                        <th className="text-right py-3 font-medium text-gray-600">Cash In</th>
+                        <th className="text-right py-3 font-medium text-gray-600">Cash Out</th>
+                        <th className="text-right py-3 font-medium text-gray-600">Net</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {cfData.monthly.map((m, i) => (
+                        <tr key={i} className="border-b border-gray-100">
+                          <td className="py-3 font-medium">{m.period}</td>
+                          <td className="py-3 text-right text-green-600">{formatCurrency(m.cashIn)}</td>
+                          <td className="py-3 text-right text-red-600">{formatCurrency(m.cashOut)}</td>
+                          <td className={`py-3 text-right font-medium ${m.netCashFlow >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                            {formatCurrency(m.netCashFlow)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
-          </div>
-          
-          <div className="flex items-start space-x-3">
-            <div className="bg-blue-100 p-2 rounded-lg">
-              <span className="text-blue-600">📅</span>
+          )}
+
+          {!plData && !bsData && !cfData && !loading && (
+            <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
+              <div className="text-5xl mb-4">📈</div>
+              <h3 className="text-lg font-semibold text-gray-800 mb-2">No data yet</h3>
+              <p className="text-gray-500">Add expenses and create invoices to see your financial reports</p>
             </div>
-            <div>
-              <div className="font-medium text-blue-900">Monthly Trend</div>
-              <div className="text-blue-800">
-                {reportData.statistics.trendPercentage >= 0 ? 'Spending increased' : 'Spending decreased'} by{' '}
-                {Math.abs(reportData.statistics.trendPercentage).toFixed(1)}% compared to last period
-              </div>
-            </div>
-          </div>
-          
-          <div className="flex items-start space-x-3">
-            <div className="bg-blue-100 p-2 rounded-lg">
-              <span className="text-blue-600">💰</span>
-            </div>
-            <div>
-              <div className="font-medium text-blue-900">Budget Recommendation</div>
-              <div className="text-blue-800">
-                Consider setting a monthly budget of {formatCurrency(reportData.totalAmount * 0.9)} to reduce spending by 10%
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+          )}
+        </>
+      )}
     </div>
   );
 };

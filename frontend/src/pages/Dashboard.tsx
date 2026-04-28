@@ -1,10 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import axios from 'axios';
 import { useExpenses } from '../contexts/ExpenseContext';
 import { useCurrency } from '../contexts/CurrencyContext';
 import { useOffline } from '../contexts/OfflineContext';
 import { format } from 'date-fns';
 import { EXPENSE_CATEGORIES } from '../types';
+
+const API_URL = (typeof import.meta !== 'undefined' ? import.meta.env?.VITE_API_URL : null) || process.env.REACT_APP_API_URL || 'https://pocketaccountant-api.onrender.com/api';
 
 const Dashboard: React.FC = () => {
   const { expenses, loading, getTotalExpenses, getExpensesByCategory } = useExpenses();
@@ -14,6 +17,7 @@ const Dashboard: React.FC = () => {
   const [monthlyTotal, setMonthlyTotal] = useState(0);
   const [categoryBreakdown, setCategoryBreakdown] = useState<Array<{category: string, amount: number, percentage: number}>>([]);
   const [recentExpenses, setRecentExpenses] = useState(expenses.slice(0, 5));
+  const [invoiceSummary, setInvoiceSummary] = useState({ revenue: 0, overdue: 0, overdueCount: 0, net: 0 });
 
   useEffect(() => {
     // Calculate monthly total (current month)
@@ -47,237 +51,179 @@ const Dashboard: React.FC = () => {
 
     // Get recent expenses
     const sortedExpenses = [...expenses]
-      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-      .slice(0, 5);
-    
-    setRecentExpenses(sortedExpenses);
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    setRecentExpenses(sortedExpenses.slice(0, 5));
+
+    // Fetch invoice summary from API
+    const fetchSummary = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const res = await axios.get(`${API_URL}/reports/dashboard`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = res.data.data || res.data;
+        setInvoiceSummary({
+          revenue: data.currentMonth?.revenue || 0,
+          overdue: data.overdue?.total || 0,
+          overdueCount: data.overdue?.count || 0,
+          net: data.currentMonth?.net || 0,
+        });
+      } catch {
+        // Silent fail — dashboard still shows expense data
+      }
+    };
+    fetchSummary();
   }, [expenses, getExpensesByCategory]);
 
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
-      </div>
-    );
-  }
+  const formatAmount = (amount: number) => {
+    return formatCurrency(amount);
+  };
+
+  const totalExpenses = getTotalExpenses();
 
   return (
     <div className="space-y-6">
-      {/* Welcome Banner */}
-      <div className="bg-gradient-to-r from-primary-500 to-primary-600 rounded-2xl p-6 text-white">
-        <div className="flex justify-between items-start">
-          <div>
-            <h1 className="text-2xl font-bold mb-2">Welcome back! 👋</h1>
-            <p className="opacity-90">Track your expenses and manage your budget effectively</p>
+      {/* Welcome Message */}
+      <div className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl p-6 text-white">
+        <h2 className="text-lg font-semibold mb-1">Welcome back</h2>
+        <p className="text-green-100 text-sm">Here's your financial overview</p>
+      </div>
+
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
+          <div className="flex items-center justify-between mb-3">
+            <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center text-green-600">
+              💰
+            </div>
           </div>
-          <div className="bg-white/20 p-3 rounded-lg">
-            <span className="text-3xl">💰</span>
-          </div>
+          <p className="text-sm text-gray-500">Total Expenses</p>
+          <p className="text-2xl font-bold text-gray-800">{formatAmount(totalExpenses)}</p>
         </div>
-        
-        <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-white/20 p-4 rounded-lg">
-            <div className="text-sm opacity-90">Monthly Spending</div>
-            <div className="text-2xl font-bold mt-1">{formatCurrency(monthlyTotal)}</div>
+
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
+          <div className="flex items-center justify-between mb-3">
+            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600">
+              📅
+            </div>
           </div>
-          <div className="bg-white/20 p-4 rounded-lg">
-            <div className="text-sm opacity-90">Total Expenses</div>
-            <div className="text-2xl font-bold mt-1">{expenses.length}</div>
+          <p className="text-sm text-gray-500">This Month</p>
+          <p className="text-2xl font-bold text-gray-800">{formatAmount(monthlyTotal)}</p>
+        </div>
+
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
+          <div className="flex items-center justify-between mb-3">
+            <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center text-purple-600">
+              📄
+            </div>
           </div>
-          <div className="bg-white/20 p-4 rounded-lg">
-            <div className="text-sm opacity-90">Connection</div>
-            <div className="text-2xl font-bold mt-1">{isOnline ? 'Online' : 'Offline'}</div>
+          <p className="text-sm text-gray-500">Revenue (This Month)</p>
+          <p className="text-2xl font-bold text-purple-700">{formatAmount(invoiceSummary.revenue)}</p>
+        </div>
+
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
+          <div className="flex items-center justify-between mb-3">
+            <div className={`w-10 h-10 ${invoiceSummary.overdueCount > 0 ? 'bg-red-100' : 'bg-green-100'} rounded-lg flex items-center justify-center ${invoiceSummary.overdueCount > 0 ? 'text-red-600' : 'text-green-600'}`}>
+              ⚠️
+            </div>
           </div>
+          <p className="text-sm text-gray-500">Overdue</p>
+          <p className={`text-2xl font-bold ${invoiceSummary.overdueCount > 0 ? 'text-red-600' : 'text-green-600'}`}>
+            {invoiceSummary.overdueCount > 0 
+              ? `${formatAmount(invoiceSummary.overdue)} (${invoiceSummary.overdueCount})`
+              : 'None ✨'}
+          </p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Category Breakdown */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
+          <h3 className="font-semibold text-gray-800 mb-4">Spending by Category</h3>
+          {categoryBreakdown.length > 0 ? (
+            <div className="space-y-3">
+              {categoryBreakdown.slice(0, 5).map((cat, index) => (
+                <div key={index}>
+                  <div className="flex justify-between text-sm mb-1">
+                    <span className="text-gray-600">{cat.category}</span>
+                    <span className="font-medium text-gray-800">
+                      {formatAmount(cat.amount)} ({Math.round(cat.percentage)}%)
+                    </span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div
+                      className="bg-green-500 rounded-full h-2 transition-all"
+                      style={{ width: `${Math.min(cat.percentage, 100)}%` }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8 text-gray-400">
+              <p>No expenses this month</p>
+            </div>
+          )}
+        </div>
+
+        {/* Recent Transactions */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-semibold text-gray-800">Recent Transactions</h3>
+            <Link to="/expenses" className="text-sm text-green-600 hover:text-green-700">
+              View All
+            </Link>
+          </div>
+          {recentExpenses.length > 0 ? (
+            <div className="space-y-3">
+              {recentExpenses.map((expense) => {
+                const category = EXPENSE_CATEGORIES.find(c => c.id === expense.category);
+                return (
+                  <div key={expense.id} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center text-sm">
+                        {category?.icon || '📦'}
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-800 text-sm">{expense.description}</p>
+                        <p className="text-xs text-gray-500">{format(new Date(expense.date), 'dd MMM yyyy')}</p>
+                      </div>
+                    </div>
+                    <p className="font-semibold text-gray-800">-{formatAmount(expense.amount)}</p>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="text-center py-8 text-gray-400">
+              <p>No transactions yet</p>
+              <Link to="/add-expense" className="text-green-600 text-sm mt-2 inline-block hover:underline">
+                Add your first expense
+              </Link>
+            </div>
+          )}
         </div>
       </div>
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Link
-          to="/add-expense"
-          className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 hover:shadow-md transition-shadow"
-        >
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="text-lg font-semibold text-gray-900">Add Expense</div>
-              <div className="text-sm text-gray-600 mt-1">Record a new expense</div>
-            </div>
-            <div className="bg-primary-100 p-3 rounded-lg">
-              <span className="text-2xl">➕</span>
-            </div>
-          </div>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <Link to="/add-expense" className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 text-center hover:shadow-md transition">
+          <div className="text-2xl mb-1">➕</div>
+          <div className="text-sm font-medium text-gray-700">Add Expense</div>
         </Link>
-
-        <Link
-          to="/reports"
-          className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 hover:shadow-md transition-shadow"
-        >
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="text-lg font-semibold text-gray-900">View Reports</div>
-              <div className="text-sm text-gray-600 mt-1">Analyze your spending</div>
-            </div>
-            <div className="bg-green-100 p-3 rounded-lg">
-              <span className="text-2xl">📈</span>
-            </div>
-          </div>
+        <Link to="/invoices/new" className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 text-center hover:shadow-md transition">
+          <div className="text-2xl mb-1">📄</div>
+          <div className="text-sm font-medium text-gray-700">New Invoice</div>
         </Link>
-
-        <Link
-          to="/settings"
-          className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 hover:shadow-md transition-shadow"
-        >
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="text-lg font-semibold text-gray-900">Settings</div>
-              <div className="text-sm text-gray-600 mt-1">Manage preferences</div>
-            </div>
-            <div className="bg-purple-100 p-3 rounded-lg">
-              <span className="text-2xl">⚙️</span>
-            </div>
-          </div>
+        <Link to="/import" className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 text-center hover:shadow-md transition">
+          <div className="text-2xl mb-1">📥</div>
+          <div className="text-sm font-medium text-gray-700">Import Statement</div>
+        </Link>
+        <Link to="/reports" className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 text-center hover:shadow-md transition">
+          <div className="text-2xl mb-1">📊</div>
+          <div className="text-sm font-medium text-gray-700">Reports</div>
         </Link>
       </div>
-
-      {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Category Breakdown */}
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-lg font-semibold text-gray-900">Spending by Category</h2>
-            <Link to="/categories" className="text-primary-600 hover:text-primary-700 text-sm font-medium">
-              View All
-            </Link>
-          </div>
-          
-          <div className="space-y-4">
-            {categoryBreakdown.length > 0 ? (
-              categoryBreakdown.map((item, index) => (
-                <div key={index} className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="font-medium text-gray-700">{item.category}</span>
-                    <span className="font-semibold text-gray-900">{formatCurrency(item.amount)}</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div
-                      className="bg-primary-600 h-2 rounded-full"
-                      style={{ width: `${Math.min(item.percentage, 100)}%` }}
-                    ></div>
-                  </div>
-                  <div className="text-xs text-gray-500 text-right">
-                    {item.percentage.toFixed(1)}% of monthly total
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="text-center py-8 text-gray-500">
-                <div className="text-4xl mb-4">📊</div>
-                <p>No expenses recorded yet</p>
-                <p className="text-sm mt-2">Start by adding your first expense!</p>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Recent Expenses */}
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-lg font-semibold text-gray-900">Recent Expenses</h2>
-            <Link to="/expenses" className="text-primary-600 hover:text-primary-700 text-sm font-medium">
-              View All
-            </Link>
-          </div>
-          
-          <div className="space-y-4">
-            {recentExpenses.length > 0 ? (
-              recentExpenses.map((expense) => {
-                const category = EXPENSE_CATEGORIES.find(c => c.id === expense.category);
-                return (
-                  <div key={expense.id} className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg">
-                    <div className="flex items-center space-x-3">
-                      <div 
-                        className="w-10 h-10 rounded-lg flex items-center justify-center text-white"
-                        style={{ backgroundColor: category?.color || '#6B7280' }}
-                      >
-                        <span className="text-lg">{category?.icon || '📦'}</span>
-                      </div>
-                      <div>
-                        <div className="font-medium text-gray-900">{expense.description}</div>
-                        <div className="text-sm text-gray-500">
-                          {format(new Date(expense.date), 'MMM dd, yyyy')}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-semibold text-gray-900">{formatCurrency(expense.amount, expense.currency)}</div>
-                      <div className="text-sm text-gray-500">{expense.currency}</div>
-                    </div>
-                  </div>
-                );
-              })
-            ) : (
-              <div className="text-center py-8 text-gray-500">
-                <div className="text-4xl mb-4">💸</div>
-                <p>No recent expenses</p>
-                <p className="text-sm mt-2">Your expenses will appear here</p>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Stats Summary */}
-      <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-        <h2 className="text-lg font-semibold text-gray-900 mb-6">Monthly Summary</h2>
-        
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="text-center p-4">
-            <div className="text-2xl font-bold text-primary-600">{formatCurrency(monthlyTotal)}</div>
-            <div className="text-sm text-gray-600 mt-1">This Month</div>
-          </div>
-          
-          <div className="text-center p-4">
-            <div className="text-2xl font-bold text-green-600">
-              {formatCurrency(getTotalExpenses(selectedCurrency))}
-            </div>
-            <div className="text-sm text-gray-600 mt-1">Total ({selectedCurrency})</div>
-          </div>
-          
-          <div className="text-center p-4">
-            <div className="text-2xl font-bold text-blue-600">{expenses.length}</div>
-            <div className="text-sm text-gray-600 mt-1">Total Expenses</div>
-          </div>
-          
-          <div className="text-center p-4">
-            <div className="text-2xl font-bold text-purple-600">
-              {categoryBreakdown.length}
-            </div>
-            <div className="text-sm text-gray-600 mt-1">Active Categories</div>
-          </div>
-        </div>
-      </div>
-
-      {/* Offline Status */}
-      {!isOnline && (
-        <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4">
-          <div className="flex items-center">
-            <div className="flex-shrink-0">
-              <div className="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">
-                <span className="text-yellow-600">⚠️</span>
-              </div>
-            </div>
-            <div className="ml-3">
-              <h3 className="text-sm font-medium text-yellow-800">You're currently offline</h3>
-              <div className="mt-1 text-sm text-yellow-700">
-                <p>Some features may be limited. Your data will sync when you're back online.</p>
-                {lastSync && (
-                  <p className="mt-1">Last sync: {format(lastSync, 'MMM dd, HH:mm')}</p>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
