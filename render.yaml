@@ -1,0 +1,22 @@
+services:
+  - type: web_service
+    name: pocketaccountant-api
+    runtime: node
+    repo: https://github.com/Leano-Agent/pocketaccountant
+    plan: free
+    region: frankfurt
+    branch: main
+    rootDir: backend
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "3000"
+      - key: JWT_SECRET
+        generateValue: true
+      - key: DATABASE_URL
+        value: file:./pocketaccountant
+      - key: CORS_ORIGIN
+        value: https://pocketaccountant.vercel.app
