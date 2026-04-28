@@ -67,7 +67,7 @@ const PWAInstallPrompt: React.FC = () => {
 
     return (
         <div className="fixed bottom-20 md:bottom-6 left-4 right-4 md:left-auto md:right-6 md:w-96 z-50">
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-green-200 dark:border-green-700 p-5 transition-all animate-slide-up">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-green-200 dark:border-green-700 p-5 transition-all">
                 <div className="flex items-start gap-4">
                     <div className="text-4xl">📱</div>
                     <div className="flex-1">
