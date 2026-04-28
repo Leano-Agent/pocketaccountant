@@ -11,6 +11,8 @@ import clientRouter from './routes/client.routes';
 import reportRouter from './routes/report.routes';
 import taxRouter from './routes/tax.routes';
 import mileageRouter from './routes/mileage.routes';
+import passport from './config/passport';
+import oauthRouter from './routes/oauth.routes';
 
 dotenv.config();
 
@@ -18,6 +20,7 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
+app.use(passport.initialize());
 
 // API Routes
 app.use('/api/expenses', expenseRouter);
@@ -28,6 +31,7 @@ app.use('/api/clients', clientRouter);
 app.use('/api/reports', reportRouter);
 app.use('/api/tax', taxRouter);
 app.use('/api/mileage', mileageRouter);
+app.use('/api/auth', oauthRouter);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

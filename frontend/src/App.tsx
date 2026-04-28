@@ -22,8 +22,10 @@ import InvoiceDetail from './pages/InvoiceDetail';
 import Clients from './pages/Clients';
 import TaxCalendar from './pages/TaxCalendar';
 import MileageLogbook from './pages/MileageLogbook';
+import OAuthCallback from './pages/OAuthCallback';
 import TaxCalendar from './pages/TaxCalendar';
 import MileageLogbook from './pages/MileageLogbook';
+import OAuthCallback from './pages/OAuthCallback';
 
 // Protected route component
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -167,6 +169,7 @@ function AppContent() {
                 } />
                 
                 {/* Redirect unknown routes */}
+                <Route path="/oauth-callback" element={<OAuthCallback />} />
                 <Route path="*" element={<Navigate to="/" />} />
               </Routes>
             </Router>
