@@ -3,7 +3,7 @@ import { Expense } from './Expense';
 
 @Entity('users')
 export class User {
-    @PrimaryGeneratedColumn('uuid')
+    @PrimaryGeneratedColumn()
     id!: string;
 
     @Column({ unique: true })
@@ -18,7 +18,7 @@ export class User {
     @Column({ length: 3, default: 'ZAR' })
     default_currency!: string;
 
-    @Column('text', { default: 'ZAR,USD,EUR' })
+    @Column({ default: 'ZAR,USD,EUR' })
     preferred_currencies!: string;
 
     @Column({ nullable: true })

@@ -9,10 +9,10 @@ dotenv.config();
 
 export const AppDataSource = new DataSource({
     type: 'sqlite',
-    database: process.env.DB_DATABASE || 'database.sqlite',
+    database: process.env.DB_DATABASE || './database.sqlite',
     synchronize: true, // Always synchronize for development
     logging: process.env.NODE_ENV === 'development',
     entities: [Expense, User, Category, Budget],
-    migrations: ['src/migrations/*.ts'],
+    // migrations removed (synchronize: true)
     subscribers: [],
 });

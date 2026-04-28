@@ -4,7 +4,7 @@ import { Category } from './Category';
 
 @Entity('expenses')
 export class Expense {
-    @PrimaryGeneratedColumn('uuid')
+    @PrimaryGeneratedColumn()
     id!: string;
 
     @Column('decimal', { precision: 15, scale: 2 })
