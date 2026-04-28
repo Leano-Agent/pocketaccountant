@@ -23,9 +23,11 @@ import Clients from './pages/Clients';
 import TaxCalendar from './pages/TaxCalendar';
 import MileageLogbook from './pages/MileageLogbook';
 import OAuthCallback from './pages/OAuthCallback';
+import AIChat from './pages/AIChat';
 import TaxCalendar from './pages/TaxCalendar';
 import MileageLogbook from './pages/MileageLogbook';
 import OAuthCallback from './pages/OAuthCallback';
+import AIChat from './pages/AIChat';
 
 // Protected route component
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -169,6 +171,13 @@ function AppContent() {
                 } />
                 
                 {/* Redirect unknown routes */}
+                <Route path="/ai" element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <AIChat />
+                    </Layout>
+                  </ProtectedRoute>
+                } />
                 <Route path="/oauth-callback" element={<OAuthCallback />} />
                 <Route path="*" element={<Navigate to="/" />} />
               </Routes>

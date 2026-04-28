@@ -13,6 +13,7 @@ import taxRouter from './routes/tax.routes';
 import mileageRouter from './routes/mileage.routes';
 import passport from './config/passport';
 import oauthRouter from './routes/oauth.routes';
+import aiRouter from './routes/ai.routes';
 
 dotenv.config();
 
@@ -32,6 +33,7 @@ app.use('/api/reports', reportRouter);
 app.use('/api/tax', taxRouter);
 app.use('/api/mileage', mileageRouter);
 app.use('/api/auth', oauthRouter);
+app.use('/api/ai', aiRouter);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
